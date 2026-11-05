@@ -1,0 +1,33 @@
+{
+  "name": "craftflow",
+  "version": "1.0.0",
+  "description": "Plateforme de gestion de prestations et de prise de rendez-vous pour artisans",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node db/init.js",
+    "db:seed": "node db/seed.js",
+    "db:reset": "npm run db:init && npm run db:seed",
+    "create-admin": "node db/create-admin.js",
+    "test": "NODE_ENV=test node db/init.js && NODE_ENV=test node --test --test-concurrency=1 \"tests/**/*.test.js\""
+  },
+  "author": "Bernis-Dieubéni Kouzou",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
+}
