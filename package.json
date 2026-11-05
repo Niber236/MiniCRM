@@ -10,7 +10,7 @@
     "db:seed": "node db/seed.js",
     "db:reset": "npm run db:init && npm run db:seed",
     "create-admin": "node db/create-admin.js",
-    "test": "NODE_ENV=test node db/init.js && NODE_ENV=test node --test --test-concurrency=1 \"tests/**/*.test.js\""
+    "test": "NODE_ENV=test node db/init.js && NODE_ENV=test node --test --test-concurrency=1 tests/*.test.js"
   },
   "author": "Bernis-Dieubéni Kouzou",
   "license": "UNLICENSED",
