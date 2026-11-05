@@ -187,6 +187,8 @@ a:hover { text-decoration-thickness: 2px; }
 }
 
 .page { padding-block: 28px 8px; display: grid; gap: 24px; }
+#app { display: grid; gap: 24px; min-width: 0; align-content: start; }
+#app > * { min-width: 0; }
 .page-head { display: grid; gap: 6px; }
 .page-head p { color: var(--muted); max-width: 62ch; }
 
@@ -226,7 +228,7 @@ a:hover { text-decoration-thickness: 2px; }
 .btn-ghost { border-color: transparent; background: transparent; }
 .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 0.9rem; }
 
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* ---------- Cartes et grilles ---------- */
 
@@ -498,6 +500,7 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .timeline time { color: var(--muted); }
 
 .list { display: grid; gap: 12px; }
+.card-compact { padding: 12px 14px; box-shadow: none; }
 
 /* ---------- Tableaux ---------- */
 
