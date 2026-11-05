@@ -1,6 +1,6 @@
 # CraftFlow — Modèle de données
 
-Source de vérité : [`db/schema.sql`](../db/schema.sql) (PostgreSQL 16).
+Source de vérité : [`db/schema.sql`](../db/schema.sql) (PostgreSQL 14 ou supérieur).
 
 ## Diagramme entité-relation
 
