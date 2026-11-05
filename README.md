@@ -24,6 +24,19 @@ Cycle de vie d'un rendez-vous : `EN_ATTENTE → CONFIRME → TERMINE`, ou `ANNUL
 - **Sécurité** : bcrypt, JWT dans un cookie `HttpOnly` / `Secure` / `SameSite=Strict`, contrôle d'origine (CSRF),
   Helmet (CSP stricte), limitation des tentatives de connexion, validation de toutes les entrées côté serveur
 
+## Pages du site
+
+| Espace | Pages |
+|---|---|
+| Public | `/` catalogue filtrable, `/login.html`, `/register.html` (client ou artisan) |
+| Client | `/service.html?id=` choix d'un créneau et réservation, `/client/rendez-vous.html` suivi et annulation |
+| Artisan | `/artisan/` tableau de bord, `/artisan/prestations.html`, `/artisan/creneaux.html`, `/artisan/profil.html` |
+| Admin | `/admin/` statistiques, artisans, utilisateurs, rendez-vous |
+
+Le front est écrit en JavaScript natif (modules ES6) sans framework. Aucune page ne contient de script ni de
+style en ligne : la politique de sécurité (CSP) du serveur les interdit, et tout texte affiché passe par
+`textContent` (jamais `innerHTML`).
+
 ## Installation
 
 Prérequis : Node.js 20+ et PostgreSQL 16 (avec l'extension `btree_gist`, incluse par défaut).
@@ -72,10 +85,11 @@ npm run create-admin -- admin@exemple.fr "MotDePasse123" Prénom Nom
 npm test
 ```
 
-Tests d'intégration (API + base réelle `craftflow_test`) et tests unitaires (machine à états) :
-authentification, rôles, cloisonnement des données, double réservation simultanée, transitions
-interdites, CSRF, prix figé, chevauchement des créneaux. Le fichier `.env.test` ne contient que des
-valeurs de test locales.
+37 tests : intégration (API + base réelle `craftflow_test`), unitaires (machine à états) et garde-fous du
+front (pas de script ou style en ligne, pas d'`innerHTML`, fichiers référencés existants).
+Ils couvrent l'authentification, les rôles, le cloisonnement des données, la double réservation
+simultanée, les transitions interdites, le CSRF, le prix figé et le chevauchement des créneaux.
+Le fichier `.env.test` ne contient que des valeurs de test locales.
 
 ## API REST
 
@@ -110,6 +124,10 @@ Toutes les routes sont préfixées par `/api`. Réponses en JSON.
 ```
 db/            schéma SQL, initialisation, données de démo, création d'admin
 docs/          documentation technique (modèle de données)
+public/
+  css/         feuille de style commune (thèmes clair et sombre)
+  js/          modules partagés (api, session, ui, layout, components) et js/pages/ (un fichier par page)
+  client/ artisan/ admin/   pages de chaque espace
 src/
   config.js    variables d'environnement
   app.js       application Express (sécurité, routes, fichiers statiques)
