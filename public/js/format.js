@@ -15,6 +15,7 @@ export const formatDay = (iso) => capitalize(dayFmt.format(new Date(iso)));
 export const formatTime = (iso) => timeFmt.format(new Date(iso));
 export const formatRange = (start, end) => `${formatTime(start)} – ${formatTime(end)}`;
 export const formatDateTime = (iso) => dateTimeFmt.format(new Date(iso));
+export const formatDate = (iso) => new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(iso));
 
 export function formatDuration(minutes) {
   const hours = Math.floor(minutes / 60);
