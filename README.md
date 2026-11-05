@@ -20,7 +20,7 @@ Cycle de vie d'un rendez-vous : `EN_ATTENTE → CONFIRME → TERMINE`, ou `ANNUL
 
 - **Front-end** : HTML5, CSS3, JavaScript natif (ES6+, Fetch API), servi par Express (même origine que l'API)
 - **Back-end** : Node.js 20+, Express 4, architecture en couches (routes → contrôleurs → modèles)
-- **Base de données** : PostgreSQL 16, requêtes préparées avec `pg` — voir [docs/database.md](docs/database.md)
+- **Base de données** : PostgreSQL 14 ou supérieur, requêtes préparées avec `pg` — voir [docs/database.md](docs/database.md)
 - **Sécurité** : bcrypt, JWT dans un cookie `HttpOnly` / `Secure` / `SameSite=Strict`, contrôle d'origine (CSRF),
   Helmet (CSP stricte), limitation des tentatives de connexion, validation de toutes les entrées côté serveur
 
@@ -39,7 +39,7 @@ style en ligne : la politique de sécurité (CSP) du serveur les interdit, et to
 
 ## Installation
 
-Prérequis : Node.js 20+ et PostgreSQL 16 (avec l'extension `btree_gist`, incluse par défaut).
+Prérequis : Node.js 20+ et PostgreSQL 14 ou supérieur (avec l'extension `btree_gist`, incluse par défaut).
 
 ```bash
 git clone https://github.com/Niber236/MiniCRM.git craftflow
