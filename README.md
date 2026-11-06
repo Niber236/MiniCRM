@@ -64,6 +64,12 @@ npm run db:reset
 npm run dev                    # http://localhost:3000
 ```
 
+## Déploiement
+
+Le fichier [`render.yaml`](render.yaml) décrit le déploiement sur Render (site + base PostgreSQL). `npm start` crée le
+schéma uniquement si la base est vide, et ne supprime jamais de données. Guide pas à pas :
+[docs/deploiement.md](docs/deploiement.md).
+
 ## Comptes de démonstration
 
 Mot de passe commun : `Demo1234`
@@ -87,7 +93,7 @@ npm run create-admin -- admin@exemple.fr "MotDePasse123" Prénom Nom
 npm test
 ```
 
-63 tests : intégration (API + base réelle `craftflow_test`), unitaires (machine à états) et garde-fous du
+65 tests : intégration (API + base réelle `craftflow_test`), unitaires (machine à états) et garde-fous du
 front (pas de script ou style en ligne, pas d'`innerHTML`, fichiers référencés existants).
 **Les 25 routes de l'API ont au moins un test automatique.** Ils couvrent l'authentification, les rôles,
 le cloisonnement des données, la double réservation simultanée, les transitions interdites, le CSRF, le prix

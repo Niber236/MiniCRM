@@ -1,9 +1,14 @@
 // Données de démonstration (comptes, prestations, créneaux, rendez-vous).
-// Mot de passe de TOUS les comptes de démo : Demo1234
+// Mot de passe de TOUS les comptes de démo : Demo1234 (en local),
+// ou la valeur de la variable DEMO_PASSWORD (obligatoire en production).
 const bcrypt = require('bcrypt');
 const { pool, withTransaction } = require('../src/db/pool');
 
-const PASSWORD = 'Demo1234';
+const PASSWORD = process.env.DEMO_PASSWORD || 'Demo1234';
+if (process.env.NODE_ENV === 'production' && (!process.env.DEMO_PASSWORD || PASSWORD.length < 8)) {
+  console.error('En production, définissez DEMO_PASSWORD (8 caractères minimum) : le mot de passe par défaut est public.');
+  process.exit(1);
+}
 
 function at(daysFromNow, hour, minute = 0) {
   const d = new Date();
@@ -120,7 +125,11 @@ function at(daysFromNow, hour, minute = 0) {
       'Évier de la salle de bain qui se vide très lentement.', ['EN_ATTENTE']);
   });
 
-  console.log('Données de démo insérées. Mot de passe de tous les comptes :', PASSWORD);
+  console.log(
+    process.env.NODE_ENV === 'production'
+      ? 'Données de démo insérées (mot de passe : valeur de DEMO_PASSWORD).'
+      : `Données de démo insérées. Mot de passe de tous les comptes : ${PASSWORD}`
+  );
   await pool.end();
 })().catch(async (err) => {
   console.error('Échec du seed :', err.message);
