@@ -4,7 +4,7 @@
   "description": "Plateforme de gestion de prestations et de prise de rendez-vous pour artisans",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node db/ensure-schema.js && node src/server.js",
     "dev": "node --watch src/server.js",
     "db:init": "node db/init.js",
     "db:seed": "node db/seed.js",
