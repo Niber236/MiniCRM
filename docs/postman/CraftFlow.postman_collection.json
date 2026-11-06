@@ -1,0 +1,1868 @@
+{
+  "info": {
+    "name": "CraftFlow API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection de test de l'API REST CraftFlow : 25 routes, avec des tests automatiques sur chaque réponse.\n\n**Avant de lancer** : démarrer le serveur (`npm run dev`) avec les données de démonstration (`npm run db:reset`).\n**Lancer** : bouton « Run collection » (Collection Runner), dans l'ordre. Les requêtes se suivent : elles passent d'un compte à un autre\n(client, artisan, administrateur) et se transmettent les identifiants (service, créneau, rendez-vous) par des variables.\n\nLimite : l'API accepte 20 tentatives de connexion ou d'inscription par 15 minutes et par adresse IP. Au-delà, elle répond 429 :\nrelancer plus tard ou redémarrer le serveur.\n\nPour tester le site déployé, changer la variable `baseUrl` de la collection."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "password",
+      "value": "Demo1234"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Santé",
+      "description": "Le serveur répond.",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : serveur actif', () => pm.response.to.have.status(200));",
+                  "pm.test('statut ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Catalogue public (sans connexion)",
+      "description": "Routes ouvertes à tous. Mémorise une prestation et un créneau libre pour la suite.",
+      "item": [
+        {
+          "name": "GET /api/trades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trades"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : liste des métiers', () => pm.response.to.have.status(200));",
+                  "const trades = pm.response.json().trades;",
+                  "pm.test('au moins 7 métiers', () => pm.expect(trades.length).to.be.at.least(7));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : catalogue public', () => pm.response.to.have.status(200));",
+                  "const services = pm.response.json().services;",
+                  "pm.test('au moins une prestation visible', () => pm.expect(services.length).to.be.above(0));",
+                  "const target = services.find((s) => /fuite/i.test(s.title)) || services[0];",
+                  "pm.collectionVariables.set('serviceId', target.id);",
+                  "pm.collectionVariables.set('serviceDuration', target.duration_minutes);",
+                  "pm.collectionVariables.set('serviceArtisanId', target.artisan_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services (filtre par mot-clé)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services?q=fuite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "fuite"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : recherche', () => pm.response.to.have.status(200));",
+                  "pm.test('tous les résultats correspondent à la recherche', () =>",
+                  "  pm.response.json().services.forEach((s) => pm.expect((s.title + s.description + s.business_name).toLowerCase()).to.include('fuite')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/{{serviceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "{{serviceId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : détail de la prestation', () => pm.response.to.have.status(200));",
+                  "pm.test('contient le prix en centimes', () => pm.expect(pm.response.json().service.price_cents).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services/:id (inexistante)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 : prestation introuvable', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services/:id/slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/{{serviceId}}/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "{{serviceId}}",
+                "slots"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : créneaux libres', () => pm.response.to.have.status(200));",
+                  "const duration = Number(pm.collectionVariables.get('serviceDuration'));",
+                  "const usable = pm.response.json().slots.filter((s) => (new Date(s.ends_at) - new Date(s.starts_at)) / 60000 >= duration);",
+                  "pm.test('au moins un créneau assez long', () => pm.expect(usable.length).to.be.above(0));",
+                  "pm.collectionVariables.set('slotId', usable[Math.floor(Math.random() * usable.length)].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/appointments (sans connexion)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 : accès refusé sans session', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Authentification",
+      "description": "Inscription, connexion, session et rôles.",
+      "item": [
+        {
+          "name": "POST /api/auth/register (nouveau client)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client-{{$timestamp}}@exemple.fr\",\n  \"password\": \"Motdepasse1\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"Postman\",\n  \"role\": \"client\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 : compte client créé', () => pm.response.to.have.status(201));",
+                  "pm.test('rôle client', () => pm.expect(pm.response.json().user.role).to.eql('client'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/register (rôle admin refusé)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pirate-{{$timestamp}}@exemple.fr\",\n  \"password\": \"Motdepasse1\",\n  \"firstName\": \"Pirate\",\n  \"lastName\": \"Admin\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sécurité : personne ne peut se déclarer administrateur via l'API."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 : inscription en admin refusée', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/register (mot de passe faible)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"faible-{{$timestamp}}@exemple.fr\",\n  \"password\": \"abc\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"Faible\",\n  \"role\": \"client\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 : validation du mot de passe', () => pm.response.to.have.status(400));",
+                  "pm.test('détail par champ', () => pm.expect(pm.response.json().details).to.have.property('password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login (mauvais mot de passe)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@craftflow.fr\",\n  \"password\": \"Mauvais123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 : identifiants invalides', () => pm.response.to.have.status(401));",
+                  "pm.test('message générique (pas de fuite sur l\\'existence du compte)', () => pm.expect(pm.response.json().error).to.eql('Email ou mot de passe incorrect'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login (client)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@craftflow.fr\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Pose le cookie de session (HttpOnly). Postman le conserve et le renvoie automatiquement aux requêtes suivantes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : connexion réussie', () => pm.response.to.have.status(200));",
+                  "pm.test('rôle attendu : client', () => pm.expect(pm.response.json().user.role).to.eql('client'));",
+                  "pm.test('cookie de session reçu', () => pm.expect(pm.cookies.has('craftflow_token')).to.be.true);",
+                  "pm.test('le mot de passe haché n\\'est jamais renvoyé', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : session valide', () => pm.response.to.have.status(200));",
+                  "pm.test('email du client connecté', () => pm.expect(pm.response.json().user.email).to.eql('client@craftflow.fr'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Espace client (connecté en client)",
+      "description": "Réserver, consulter et annuler. Un client ne peut ni confirmer ni accéder à l'espace artisan.",
+      "item": [
+        {
+          "name": "POST /api/appointments (réservation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"slotId\": {{slotId}},\n  \"address\": \"12 rue de Rivoli, 75004 Paris\",\n  \"description\": \"Fuite sous l'évier de la cuisine, ça goutte en continu.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 : rendez-vous créé', () => pm.response.to.have.status(201));",
+                  "const a = pm.response.json().appointment;",
+                  "pm.test('statut initial EN_ATTENTE', () => pm.expect(a.status).to.eql('EN_ATTENTE'));",
+                  "pm.test('prix figé à la réservation', () => pm.expect(a.price_cents).to.be.a('number'));",
+                  "pm.collectionVariables.set('appointmentId', a.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/appointments (même créneau : conflit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"slotId\": {{slotId}},\n  \"address\": \"12 rue de Rivoli, 75004 Paris\",\n  \"description\": \"Deuxième tentative sur le même créneau.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Protection contre la double réservation (verrou de ligne + index unique partiel)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 : créneau déjà réservé', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/appointments (champs invalides)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"slotId\": {{slotId}},\n  \"address\": \"x\",\n  \"description\": \"court\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 : validation des champs', () => pm.response.to.have.status(400));",
+                  "pm.test('détails par champ', () => pm.expect(pm.response.json().details).to.have.keys('address', 'description'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/appointments (mes rendez-vous)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : liste du client', () => pm.response.to.have.status(200));",
+                  "const id = Number(pm.collectionVariables.get('appointmentId'));",
+                  "pm.test('contient le rendez-vous créé', () => pm.expect(pm.response.json().appointments.map((a) => a.id)).to.include(id));",
+                  "pm.test('le client ne peut qu\\'annuler', () =>",
+                  "  pm.expect(pm.response.json().appointments.find((a) => a.id === id).allowed_transitions).to.eql(['ANNULE']));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/appointments/:id (détail + historique)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : détail', () => pm.response.to.have.status(200));",
+                  "pm.test('historique : création', () => pm.expect(pm.response.json().history[0].to_status).to.eql('EN_ATTENTE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/appointments/:id/status (client veut confirmer)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRME\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('422 : transition interdite pour un client', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/artisan/profile (client)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artisan/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artisan",
+                "profile"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 : espace réservé aux artisans', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Espace artisan (connecté en artisan)",
+      "description": "Profil, prestations, créneaux et traitement des demandes.",
+      "item": [
+        {
+          "name": "POST /api/auth/login (artisan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"plombier@craftflow.fr\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Pose le cookie de session (HttpOnly). Postman le conserve et le renvoie automatiquement aux requêtes suivantes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : connexion réussie', () => pm.response.to.have.status(200));",
+                  "pm.test('rôle attendu : artisan', () => pm.expect(pm.response.json().user.role).to.eql('artisan'));",
+                  "pm.test('cookie de session reçu', () => pm.expect(pm.cookies.has('craftflow_token')).to.be.true);",
+                  "pm.test('le mot de passe haché n\\'est jamais renvoyé', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/artisan/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artisan/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artisan",
+                "profile"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : profil artisan', () => pm.response.to.have.status(200));",
+                  "pm.test('profil validé', () => pm.expect(pm.response.json().profile.is_verified).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/artisan/profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/artisan/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artisan",
+                "profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Plombier depuis 15 ans, intervention rapide sur Paris et proche banlieue.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : profil modifié', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/services/mine",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "mine"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : mes prestations', () => pm.response.to.have.status(200));",
+                  "pm.test('liste non vide', () => pm.expect(pm.response.json().services.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/services",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pose de robinet (Postman)\",\n  \"description\": \"Fourniture non comprise\",\n  \"priceCents\": 7550,\n  \"durationMinutes\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 : prestation créée', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('newServiceId', pm.response.json().service.id);",
+                  "pm.test('prix stocké en centimes', () => pm.expect(pm.response.json().service.price_cents).to.eql(7550));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/services (données invalides)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"ab\",\n  \"priceCents\": -1,\n  \"durationMinutes\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 : validation', () => pm.response.to.have.status(400));",
+                  "pm.test('3 champs en erreur', () => pm.expect(Object.keys(pm.response.json().details)).to.have.lengthOf(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/services/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/{{newServiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "{{newServiceId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priceCents\": 8000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : prestation modifiée', () => pm.response.to.have.status(200));",
+                  "pm.test('nouveau prix', () => pm.expect(pm.response.json().service.price_cents).to.eql(8000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/services/:id (désactivation)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/{{newServiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "{{newServiceId}}"
+              ]
+            },
+            "description": "Désactive la prestation (suppression logique) : elle disparaît du catalogue, l'historique est conservé."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : prestation désactivée', () => pm.response.to.have.status(200));",
+                  "pm.test('is_active = false', () => pm.expect(pm.response.json().service.is_active).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/slots (3 h en créneaux de 1 h)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "slots"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start\": \"{{slotStart}}\",\n  \"end\": \"{{slotEnd}}\",\n  \"durationMinutes\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const day = 30 + Math.floor(Math.random() * 300);",
+                  "const start = new Date();",
+                  "start.setUTCDate(start.getUTCDate() + day);",
+                  "start.setUTCHours(8, 0, 0, 0);",
+                  "pm.collectionVariables.set('slotStart', start.toISOString());",
+                  "pm.collectionVariables.set('slotEnd', new Date(start.getTime() + 3 * 3600 * 1000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 : créneaux créés', () => pm.response.to.have.status(201));",
+                  "const slots = pm.response.json().slots;",
+                  "pm.test('3 créneaux consécutifs', () => pm.expect(slots).to.have.lengthOf(3));",
+                  "pm.collectionVariables.set('newSlotId', slots[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "slots"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : mon planning', () => pm.response.to.have.status(200));",
+                  "pm.test('contient le créneau créé', () => pm.expect(pm.response.json().slots.map((s) => s.id)).to.include(Number(pm.collectionVariables.get('newSlotId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/slots/:id (créneau libre)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/slots/{{newSlotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "slots",
+                "{{newSlotId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 : créneau supprimé', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/slots/:id (créneau réservé)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/slots/{{slotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "slots",
+                "{{slotId}}"
+              ]
+            },
+            "description": "Le créneau du rendez-vous créé à l'étape 3 est lié à un rendez-vous : il ne peut pas être supprimé."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 : suppression refusée', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/appointments (demandes reçues)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : demandes reçues', () => pm.response.to.have.status(200));",
+                  "const a = pm.response.json().appointments.find((x) => x.id === Number(pm.collectionVariables.get('appointmentId')));",
+                  "pm.test('la demande du client est visible', () => pm.expect(a).to.exist);",
+                  "pm.test('l\\'artisan peut confirmer ou refuser', () => pm.expect(a.allowed_transitions).to.have.members(['CONFIRME', 'ANNULE']));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/appointments/:id/status → CONFIRME",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRME\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : rendez-vous confirmé', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/appointments/:id/status → TERMINE",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"TERMINE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : intervention terminée', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/appointments/:id/status (état final)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointmentId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EN_ATTENTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "TERMINE est un état final : aucun retour en arrière."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('422 : transition interdite', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/appointments (un artisan ne réserve pas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"slotId\": {{slotId}},\n  \"address\": \"12 rue de Rivoli, 75004 Paris\",\n  \"description\": \"Un artisan ne peut pas réserver.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 : réservation réservée aux clients', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Administration (connecté en administrateur)",
+      "description": "Statistiques, validation des artisans, gestion des comptes.",
+      "item": [
+        {
+          "name": "POST /api/auth/login (administrateur)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@craftflow.fr\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Pose le cookie de session (HttpOnly). Postman le conserve et le renvoie automatiquement aux requêtes suivantes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : connexion réussie', () => pm.response.to.have.status(200));",
+                  "pm.test('rôle attendu : admin', () => pm.expect(pm.response.json().user.role).to.eql('admin'));",
+                  "pm.test('cookie de session reçu', () => pm.expect(pm.cookies.has('craftflow_token')).to.be.true);",
+                  "pm.test('le mot de passe haché n\\'est jamais renvoyé', () => pm.expect(JSON.stringify(pm.response.json())).to.not.include('password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/admin/stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "stats"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : statistiques', () => pm.response.to.have.status(200));",
+                  "pm.test('compteurs numériques', () => pm.expect(pm.response.json().stats.appointments).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/admin/users?role=artisan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?role=artisan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "artisan"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : liste des artisans', () => pm.response.to.have.status(200));",
+                  "const users = pm.response.json().users;",
+                  "pm.test('uniquement des artisans', () => users.forEach((u) => pm.expect(u.role).to.eql('artisan')));",
+                  "const pending = users.find((u) => u.email === 'serrurier@craftflow.fr');",
+                  "if (pending) pm.collectionVariables.set('artisanUserId', pending.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/admin/users (tous)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : tous les comptes', () => pm.response.to.have.status(200));",
+                  "const users = pm.response.json().users;",
+                  "pm.collectionVariables.set('clientUserId', users.find((u) => u.email === 'client@craftflow.fr').id);",
+                  "pm.collectionVariables.set('adminUserId', users.find((u) => u.role === 'admin').id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/admin/artisans/:id/verify",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/artisans/{{artisanUserId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "artisans",
+                "{{artisanUserId}}",
+                "verify"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isVerified\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : artisan validé', () => pm.response.to.have.status(200));",
+                  "pm.test('is_verified = true', () => pm.expect(pm.response.json().profile.is_verified).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/admin/users/:id/active (réactiver un client)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{clientUserId}}/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{clientUserId}}",
+                "active"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Mettre `isActive` à false suspend le compte : il perd l'accès immédiatement, même avec un jeton encore valide."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : compte actif', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/admin/users/:id/active (admin protégé)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{adminUserId}}/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{adminUserId}}",
+                "active"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 : un compte administrateur ne peut pas être désactivé', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/appointments (tous les rendez-vous)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 : vue administrateur', () => pm.response.to.have.status(200));",
+                  "pm.test('voit les rendez-vous de plusieurs clients', () => pm.expect(pm.response.json().appointments.length).to.be.above(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Déconnexion",
+      "description": "Fin de session.",
+      "item": [
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 : déconnecté', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me (après déconnexion)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 : plus de session', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
