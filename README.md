@@ -1,5 +1,7 @@
 # CraftFlow
 
+[![CI](https://github.com/Niber236/MiniCRM/actions/workflows/ci.yml/badge.svg)](https://github.com/Niber236/MiniCRM/actions/workflows/ci.yml)
+
 Plateforme de prise de rendez-vous et de suivi d'interventions pour artisans indépendants
 (plombiers, électriciens, serruriers...).
 
@@ -85,11 +87,32 @@ npm run create-admin -- admin@exemple.fr "MotDePasse123" Prénom Nom
 npm test
 ```
 
-37 tests : intégration (API + base réelle `craftflow_test`), unitaires (machine à états) et garde-fous du
+63 tests : intégration (API + base réelle `craftflow_test`), unitaires (machine à états) et garde-fous du
 front (pas de script ou style en ligne, pas d'`innerHTML`, fichiers référencés existants).
-Ils couvrent l'authentification, les rôles, le cloisonnement des données, la double réservation
-simultanée, les transitions interdites, le CSRF, le prix figé et le chevauchement des créneaux.
-Le fichier `.env.test` ne contient que des valeurs de test locales.
+**Les 25 routes de l'API ont au moins un test automatique.** Ils couvrent l'authentification, les rôles,
+le cloisonnement des données, la double réservation simultanée, les transitions interdites, le CSRF, le prix
+figé, la désactivation sans perte d'historique, les créneaux (planning, suppression, plages invalides) et la
+validation des entrées. Le fichier `.env.test` ne contient que des valeurs de test locales.
+
+### Intégration continue
+
+Le fichier [`.github/workflows/ci.yml`](.github/workflows/ci.yml) lance les tests à chaque push et pull request
+sur une vraie base PostgreSQL, avec deux combinaisons : Node 20 + PostgreSQL 14 et Node 22 + PostgreSQL 16.
+Un second job recherche les vulnérabilités connues des dépendances (`npm audit`).
+
+### Collection Postman
+
+[`docs/postman/CraftFlow.postman_collection.json`](docs/postman/CraftFlow.postman_collection.json) contient
+les 25 routes (48 requêtes, 87 vérifications automatiques) : cas nominaux, refus de droits (401, 403),
+validation (400), conflits (409) et transitions interdites (422).
+
+1. Postman : *Import* puis choisir ce fichier.
+2. Démarrer le serveur avec les données de démonstration (`npm run db:reset && npm run dev`).
+3. Dans la collection, *Run collection* : les requêtes s'enchaînent en changeant de compte (client, artisan, administrateur).
+
+En ligne de commande : `npx newman run docs/postman/CraftFlow.postman_collection.json`.
+Pour tester un site déployé, changer la variable `baseUrl` de la collection. L'API limite les connexions à
+20 par 15 minutes et par adresse IP (réponse 429 au-delà).
 
 ## API REST
 

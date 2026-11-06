@@ -105,7 +105,11 @@ function slotRow(slot) {
         ? statusBadge(slot.appointment_status)
         : h('div', { class: 'actions' },
             h('span', { class: 'badge badge-ok' }, 'Libre'),
-            confirmButton({ label: 'Supprimer', confirmLabel: 'Oui, supprimer', onConfirm: () => removeSlot(slot) }))));
+            // Un créneau déjà réservé puis annulé reste réservable, mais n'est plus supprimable (historique).
+            slot.has_history
+              ? null
+              : confirmButton({ label: 'Supprimer', confirmLabel: 'Oui, supprimer', onConfirm: () => removeSlot(slot) }))),
+    !booked && slot.has_history ? h('p', { class: 'small muted' }, 'Réservé puis annulé : conservé pour l\'historique.') : null);
 }
 
 async function loadPlanning() {
@@ -131,7 +135,7 @@ mount(app,
   form,
   h('section', { class: 'stack', 'aria-labelledby': 'planning-title' },
     h('h2', { id: 'planning-title' }, 'Planning à venir'),
-    alertBox('Un créneau déjà réservé ne peut pas être supprimé : annulez d\'abord le rendez-vous depuis le tableau de bord.'),
+    alertBox('Seuls les créneaux jamais réservés peuvent être supprimés : un créneau qui a reçu un rendez-vous est conservé pour l\'historique, même annulé.'),
     planning)
 );
 updatePreview();
