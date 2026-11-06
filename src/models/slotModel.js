@@ -24,6 +24,8 @@ async function listAvailable(artisanId) {
 async function listByArtisan(artisanId, { includePast = false } = {}) {
   const { rows } = await query(
     `SELECT sl.id, sl.starts_at, sl.ends_at,
+            -- Un créneau déjà réservé (même annulé depuis) est gardé pour l'historique : il ne peut plus être supprimé.
+            EXISTS (SELECT 1 FROM appointments x WHERE x.slot_id = sl.id) AS has_history,
             a.id AS appointment_id, a.status AS appointment_status,
             s.title AS service_title,
             u.first_name AS client_first_name, u.last_name AS client_last_name
