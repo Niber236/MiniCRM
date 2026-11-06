@@ -5,7 +5,8 @@ const config = require('../config');
 const pool = new Pool({
   connectionString: config.databaseUrl,
   // Les bases hébergées (Render, Railway) imposent SSL en production.
-  ssl: config.isProduction ? { rejectUnauthorized: false } : false,
+  // DATABASE_SSL=false permet de s'en passer (base sans SSL sur un réseau privé).
+  ssl: config.isProduction && process.env.DATABASE_SSL !== 'false' ? { rejectUnauthorized: false } : false,
 });
 
 /**
