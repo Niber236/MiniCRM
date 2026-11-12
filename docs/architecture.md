@@ -1,10 +1,43 @@
 # CraftFlow : diagrammes d'architecture
 
-Trois diagrammes décrivent le comportement du système. Les images (dossier `diagrams/`) sont prêtes à coller
+Cinq diagrammes décrivent le système : son architecture, son déploiement et son comportement. Les images (dossier `diagrams/`) sont prêtes à coller
 dans un document Word ou PDF. Les diagrammes de séquence et d'états sont aussi fournis en texte Mermaid,
 que GitHub affiche directement et que l'on peut modifier.
 
-## 1. Diagramme de cas d'utilisation
+## 1. Architecture logique : du navigateur à la base de données
+
+![Architecture logique de CraftFlow](diagrams/architecture-logique.png)
+
+Une requête traverse **cinq étages**, de haut en bas, puis la réponse remonte par le même chemin. Chaque étage a un seul rôle.
+
+| Étage | Fichier | Rôle |
+|---|---|---|
+| 1. Middlewares | `src/app.js` | En-têtes de sécurité (Helmet : CSP, HSTS), JSON limité à 20 Ko, lecture des cookies, contrôle de l'origine (CSRF), limitation des tentatives de connexion |
+| 2. Routes | `src/routes/index.js` | Les 25 routes de l'API. `authenticate` vérifie le JWT du cookie, puis `requireRole` contrôle le rôle (client, artisan, admin) |
+| 3. Contrôleurs | `src/controllers/` | Validation des entrées, règles métier, `statusMachine` pour les statuts des rendez-vous |
+| 4. Modèles | `src/models/` | Les requêtes SQL, toutes préparées (`$1`, `$2`) : aucune valeur n'est collée dans le texte SQL |
+| 5. Accès à la base | `src/db/pool.js` | Pool de connexions, `query()` et `withTransaction()` (BEGIN, COMMIT, ROLLBACK) |
+
+En plus : `errorHandler` traduit les erreurs (HttpError, erreurs PostgreSQL) en codes HTTP lisibles ; `config.js` lit les variables d'environnement et refuse un `JWT_SECRET` trop court en production ; le dossier `public/` est servi par le **même serveur** que l'API.
+
+Points à retenir :
+
+- **Séparation des responsabilités** : changer la base touche les modèles, changer une règle métier touche les contrôleurs, changer une route touche les routes. Chaque couche se teste séparément.
+- **Une seule origine** : le même serveur envoie les pages et répond à l'API. Les cookies de session stricts (`SameSite=Strict`) fonctionnent donc sans configuration CORS.
+- **Aucun framework front-end** : le navigateur reçoit 10 pages HTML, un CSS commun et du JavaScript natif en modules (`api.js`, `session.js`, `ui.js`, `layout.js`, `components.js`, un fichier par page).
+- **L'ordre des middlewares compte** : la sécurité (en-têtes, taille du JSON, origine) passe avant les routes, donc avant tout traitement métier.
+
+## 2. Architecture de déploiement et d'outils
+
+![Architecture de déploiement de CraftFlow](diagrams/architecture-deploiement.png)
+
+Le code est écrit sur le poste de développement (WSL, VS Code, Git, PostgreSQL local, Postman), puis envoyé sur GitHub avec `git push`. À chaque push, **GitHub Actions** lance les tests sur deux combinaisons (Node 20 avec PostgreSQL 14, Node 22 avec PostgreSQL 16) et un audit des dépendances.
+
+Le fichier `render.yaml` décrit l'hébergement sur **Render** : un service web Node.js et une base PostgreSQL sur réseau privé. Au démarrage, `db/ensure-schema.js` crée le schéma **seulement si la base est vide** (jamais d'effacement d'une base qui contient des données). Les secrets (`JWT_SECRET`, `DEMO_PASSWORD`) sont des variables d'environnement, jamais écrites dans Git. Détail pas à pas : [deploiement.md](deploiement.md).
+
+État : la configuration de déploiement est prête et testée en simulation ; la mise en ligne dépend du compte Render de l'auteur.
+
+## 3. Diagramme de cas d'utilisation
 
 ![Diagramme de cas d'utilisation](diagrams/cas-utilisation.png)
 
@@ -25,7 +58,7 @@ Points à retenir :
 - **Il n'existe aucun cas d'utilisation « devenir administrateur »** : ce compte est créé uniquement par un script serveur
   (`npm run create-admin`), jamais depuis le site. L'API refuse `role: admin` à l'inscription.
 
-## 2. Diagramme de séquence : réservation d'un créneau
+## 4. Diagramme de séquence : réservation d'un créneau
 
 ![Diagramme de séquence de la réservation](diagrams/sequence-reservation.png)
 
@@ -95,7 +128,7 @@ Ce que le diagramme démontre :
 - **Le rôle des codes HTTP** : `400` données invalides, `401` non connecté, `403` mauvais rôle, `404` introuvable, `409` créneau pris,
   `422` transition de statut interdite.
 
-## 3. Diagramme d'états : cycle de vie d'un rendez-vous
+## 5. Diagramme d'états : cycle de vie d'un rendez-vous
 
 ![Diagramme d'états d'un rendez-vous](diagrams/machine-etats.png)
 
@@ -136,3 +169,9 @@ Le second attend le verrou, puis l'index unique le refuse : il reçoit `409`, sa
 
 **Pourquoi vérifier le rôle dans l'API alors que l'interface cache déjà les boutons ?** L'interface n'est qu'un confort :
 n'importe qui peut appeler l'API directement. La vraie protection est le middleware `requireRole`.
+
+**Pourquoi découper le serveur en couches (routes, contrôleurs, modèles) ?** Pour que chaque fichier n'ait qu'un rôle : on modifie une règle métier sans toucher au SQL, et on teste chaque couche séparément.
+
+**Pourquoi aucun framework front-end ?** Pour maîtriser directement le DOM et les échanges HTTP, éviter l'étape de compilation, et pouvoir interdire tout script ou style en ligne côté serveur (politique CSP stricte), ce qui limite les failles XSS.
+
+**Que se passe-t-il quand vous faites `git push` ?** GitHub Actions lance les tests sur Node 20 + PostgreSQL 14 et Node 22 + PostgreSQL 16, plus un audit des dépendances. Une fois la branche `main` à jour, Render peut redéployer le site automatiquement.
