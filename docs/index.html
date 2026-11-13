@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CraftFlow · Réservez un artisan et suivez son intervention</title>
+  <meta name="description" content="CraftFlow est une plateforme de prise de rendez-vous et de suivi d’interventions pour les artisans indépendants : un espace client, un espace artisan et un espace administrateur.">
+  <meta name="theme-color" content="#10272C">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CraftFlow · Réservez un artisan et suivez son intervention">
+  <meta property="og:description" content="Prise de rendez-vous et suivi d’interventions pour les artisans indépendants. Projet de fin de formation, Holberton School France.">
+  <meta property="og:image" content="assets/og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Rubik:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#projet">Aller au contenu</a>
+
+  <header class="header" id="top">
+    <div class="header__inner">
+      <a class="brand" href="#top" aria-label="CraftFlow, retour en haut de page">
+        <span class="brand__mark" aria-hidden="true"></span>
+        <span class="brand__name">CraftFlow</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu">
+        <span class="nav-toggle__label">Menu</span>
+      </button>
+      <nav class="nav" id="menu" aria-label="Sections de la page">
+        <a href="#projet">Le projet</a>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#technologies">Technologies</a>
+        <a href="#developpeur">Développeur</a>
+        <a class="nav__github" href="https://github.com/Niber236/MiniCRM" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Introduction : image de couverture, nom, phrase d’accroche, bouton vers l’application -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__inner">
+        <div class="hero__text">
+          <p class="eyebrow">Projet de fin de formation · RNCP 5</p>
+          <h1 id="hero-title">CraftFlow</h1>
+          <p class="hero__lead">Réservez un artisan et suivez son intervention, sans appels ni carnet papier.</p>
+          <div class="actions">
+            <!-- Remplacer l’adresse ci-dessous par celle de l’application déployée (voir README.md) -->
+            <a class="btn btn--primary" href="https://application-non-deployee.invalid/">Ouvrir l’application</a>
+            <a class="btn btn--ghost" href="https://github.com/Niber236/MiniCRM" rel="noopener">Voir le code sur GitHub</a>
+          </div>
+          <ul class="hero__facts" aria-label="CraftFlow en chiffres">
+            <li><strong>3</strong> espaces</li>
+            <li><strong>25</strong> routes d’API</li>
+            <li><strong>65</strong> tests automatiques</li>
+          </ul>
+        </div>
+        <figure class="hero__shot">
+          <div class="frame">
+            <div class="frame__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+            <img src="assets/img/catalogue.webp" width="1600" height="1000" alt="Page d’accueil de l’application CraftFlow : trois étapes pour réserver, des filtres par métier et par ville, et le catalogue des prestations">
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="projet" aria-labelledby="projet-title">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark">Le projet</p>
+        <h2 id="projet-title">Un rendez-vous pris en quelques clics, un suivi clair des deux côtés</h2>
+        <div class="split">
+          <div class="prose">
+            <h3>Le problème</h3>
+            <p>Les plombiers, électriciens et serruriers indépendants gèrent leurs rendez-vous à la main : SMS, appels pendant les interventions, calepins papier. Ils estiment y perdre cinq à dix heures par semaine, et leurs clients ne savent pas si leur demande a été prise en compte.</p>
+            <h3>La solution</h3>
+            <p>CraftFlow réunit en un seul outil une vitrine pour réserver et un tableau de bord pour piloter. L’artisan ouvre ses disponibilités à l’avance ; le client choisit un créneau libre, décrit sa panne et suit l’avancement de sa demande.</p>
+          </div>
+          <div class="cycle" aria-label="Cycle de vie d’un rendez-vous">
+            <p class="cycle__title">Cycle de vie d’un rendez-vous</p>
+            <ol class="cycle__steps">
+              <li><span class="chip chip--wait">EN ATTENTE</span><span>Le client envoie sa demande</span></li>
+              <li><span class="chip chip--ok">CONFIRMÉ</span><span>L’artisan accepte l’intervention</span></li>
+              <li><span class="chip chip--done">TERMINÉ</span><span>L’intervention est clôturée</span></li>
+            </ol>
+            <p class="cycle__note">Un rendez-vous peut aussi être <span class="chip chip--cancel">ANNULÉ</span> avant sa fin. Chaque changement est enregistré avec sa date et son auteur.</p>
+          </div>
+        </div>
+
+        <h3 class="subtitle">Trois espaces, trois rôles</h3>
+        <div class="cards">
+          <article class="card">
+            <p class="card__num">1</p>
+            <h4>Client</h4>
+            <p>Parcourt le catalogue, choisit un créneau libre, décrit sa panne, suit ses rendez-vous et peut les annuler.</p>
+          </article>
+          <article class="card">
+            <p class="card__num">2</p>
+            <h4>Artisan</h4>
+            <p>Gère son profil, ses prestations et ses créneaux, puis confirme, termine ou refuse les demandes reçues.</p>
+          </article>
+          <article class="card">
+            <p class="card__num">3</p>
+            <h4>Administrateur</h4>
+            <p>Valide les artisans, suspend des comptes et modère les rendez-vous de la plateforme.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="fonctionnalites" aria-labelledby="fonctionnalites-title">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark">Fonctionnalités</p>
+        <h2 id="fonctionnalites-title">Ce que l’application permet de faire</h2>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Réserver sur un créneau libre</h3>
+            <p>L’artisan ouvre ses disponibilités. Le client ne voit que les créneaux assez longs pour la prestation, indique son adresse et décrit sa panne.</p>
+            <p>Deux clients ne peuvent pas réserver le même créneau : c’est la base de données elle-même qui l’interdit, même si deux demandes arrivent en même temps.</p>
+          </div>
+          <div class="feature__media">
+            <div class="frame">
+              <div class="frame__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="assets/img/service.webp" width="1600" height="1000" loading="lazy" alt="Page d’une prestation : description, prix, durée, liste des créneaux libres et formulaire de demande">
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Piloter ses interventions</h3>
+            <p>Le tableau de bord de l’artisan rassemble les demandes à traiter, les interventions confirmées et terminées, et le montant des interventions réalisées.</p>
+            <p>Il confirme ou refuse en un clic ; seules les transitions autorisées sont proposées.</p>
+          </div>
+          <div class="feature__media">
+            <div class="frame">
+              <div class="frame__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="assets/img/artisan.webp" width="1600" height="1000" loading="lazy" alt="Tableau de bord de l’artisan : chiffres clés, onglets par statut et demandes avec les boutons Confirmer et Refuser">
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Suivre son rendez-vous</h3>
+            <p>Le client retrouve toutes ses demandes avec leur statut à chaque instant, l’historique des changements, et peut annuler tant que l’intervention n’est pas terminée.</p>
+          </div>
+          <div class="feature__media">
+            <div class="frame">
+              <div class="frame__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="assets/img/client-rdv.webp" width="1600" height="1000" loading="lazy" alt="Page Mes rendez-vous du client, avec le statut de chaque demande">
+            </div>
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature__text">
+            <h3>Administrer la plateforme</h3>
+            <p>L’administrateur voit l’activité d’ensemble, valide les nouveaux artisans avant qu’ils apparaissent au catalogue, suspend un compte et modère les rendez-vous.</p>
+            <p>Un compte suspendu perd l’accès dès sa requête suivante.</p>
+          </div>
+          <div class="feature__media">
+            <div class="frame">
+              <div class="frame__bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="assets/img/admin.webp" width="1600" height="1000" loading="lazy" alt="Espace administrateur : aperçu de l’activité de la plateforme">
+            </div>
+          </div>
+        </article>
+
+        <div class="mobile">
+          <img class="mobile__shot" src="assets/img/mobile-service.webp" width="780" height="1688" loading="lazy" alt="La page d’une prestation affichée sur un téléphone">
+          <div class="mobile__text">
+            <h3>Pensé pour le mobile</h3>
+            <p>Un client réserve souvent depuis son téléphone, au moment où la panne arrive. Les pages s’adaptent aux petits écrans, avec un thème clair et un thème sombre selon les préférences de l’appareil.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="technologies" aria-labelledby="technologies-title">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark">Technologies</p>
+        <h2 id="technologies-title">Une application complète, sans framework front-end</h2>
+
+        <ul class="stats" aria-label="Chiffres du projet">
+          <li><strong>25</strong><span>routes d’API</span></li>
+          <li><strong>7</strong><span>tables PostgreSQL</span></li>
+          <li><strong>65</strong><span>tests automatiques</span></li>
+          <li><strong>6</strong><span>versions publiées</span></li>
+        </ul>
+
+        <div class="cards cards--tech">
+          <article class="card">
+            <h4>Back-end</h4>
+            <p>Node.js et Express, API REST en JSON, authentification par JWT dans un cookie HttpOnly, mots de passe hachés avec bcrypt.</p>
+          </article>
+          <article class="card">
+            <h4>Base de données</h4>
+            <p>PostgreSQL : 7 tables, types ENUM pour les rôles et les statuts, contraintes qui interdisent la double réservation et les créneaux qui se chevauchent.</p>
+          </article>
+          <article class="card">
+            <h4>Front-end</h4>
+            <p>HTML5, CSS3 et JavaScript natif en modules ES. Aucun framework : tout le code est écrit à la main.</p>
+          </article>
+          <article class="card">
+            <h4>Sécurité</h4>
+            <p>Requêtes SQL paramétrées, politique de sécurité du contenu stricte, contrôle de l’origine des requêtes, limite de tentatives de connexion.</p>
+          </article>
+          <article class="card">
+            <h4>Qualité</h4>
+            <p>Tests automatiques, intégration continue GitHub Actions sur deux versions de Node et de PostgreSQL, collection Postman de l’API.</p>
+          </article>
+          <article class="card">
+            <h4>Méthode</h4>
+            <p>Git Flow, commits conventionnels, versions étiquetées. Outils : VS Code, Git, Postman et Claude Code comme assistant de développement.</p>
+          </article>
+        </div>
+
+        <figure class="diagram">
+          <img src="assets/img/architecture.webp" width="2000" height="998" loading="lazy" alt="Architecture de CraftFlow : le navigateur, le serveur Node.js avec ses cinq étages (middlewares, routes, contrôleurs, modèles, accès à la base) et la base PostgreSQL">
+          <figcaption>Architecture logique de CraftFlow, du navigateur à la base de données.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="developpeur" aria-labelledby="developpeur-title">
+      <div class="container">
+        <p class="eyebrow eyebrow--dark">Le développeur</p>
+        <h2 id="developpeur-title">Derrière CraftFlow</h2>
+        <div class="dev">
+          <div class="dev__id">
+            <p class="avatar" aria-hidden="true">BK</p>
+            <p class="dev__name">Bernis-Dieubéni Kouzou</p>
+            <p class="dev__role">Développeur Web Full-Stack<br>Holberton School France · RNCP niveau 5</p>
+            <a class="btn btn--dark" href="https://github.com/Niber236/MiniCRM" rel="noopener">Voir le code sur GitHub</a>
+          </div>
+          <div class="prose">
+            <p>CraftFlow est mon projet de fin de formation. Je l’ai réalisé seul, en endossant tour à tour le rôle de chef de projet, de développeur back-end et de développeur front-end.</p>
+            <p>J’ai choisi ce sujet parce qu’il pose un problème concret et qu’il touche à tout ce que je voulais pratiquer : un modèle relationnel soigné, une API REST sécurisée, une machine à états pour suivre les interventions, et une interface écrite sans framework.</p>
+            <p>Ce que j’en retiens : concevoir la base de données avant l’interface, écrire les tests en même temps que les règles sensibles, documenter tôt et déployer tôt. Pour avancer plus vite, j’ai utilisé un assistant de développement ; je relis, je teste et je sais expliquer chaque partie du code.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="container cta__inner">
+        <h2 id="cta-title">Découvrez CraftFlow</h2>
+        <p>Essayez l’application ou parcourez le code source.</p>
+        <div class="actions actions--center">
+          <!-- Même adresse que le bouton de l’introduction -->
+          <a class="btn btn--primary" href="https://application-non-deployee.invalid/">Ouvrir l’application</a>
+          <a class="btn btn--ghost" href="https://github.com/Niber236/MiniCRM" rel="noopener">Voir le code sur GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <p>© 2026 Bernis-Dieubéni Kouzou · Projet réalisé à Holberton School France</p>
+      <nav aria-label="Pied de page">
+        <a href="#projet">Le projet</a>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#technologies">Technologies</a>
+        <a href="#developpeur">Développeur</a>
+        <a href="https://github.com/Niber236/MiniCRM" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
